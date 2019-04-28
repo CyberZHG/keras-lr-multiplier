@@ -2,16 +2,19 @@ import os
 import tempfile
 from unittest import TestCase
 import numpy as np
-from keras.models import Sequential, load_model
-from keras.layers import Dense
-from keras.optimizers import Adam
-from keras.callbacks import ReduceLROnPlateau, EarlyStopping
-from keras_lr_multiplier import LRMultiplier
+from tensorflow.python.keras.models import Sequential, load_model
+from tensorflow.python.keras.layers import Dense
+from tensorflow.python.keras.optimizers import Adam
+from tensorflow.python.keras.callbacks import ReduceLROnPlateau, EarlyStopping
+from keras import backend as K
+from keras_lr_multiplier.tf_multiplier import LRMultiplier
 
 
-class TestMultiplier(TestCase):
+class TestTFMultiplier(TestCase):
 
     def test_compare_rate(self):
+        if K.backend() != 'tensorflow':
+            return
         inputs = np.random.standard_normal((1024, 5))
         outputs = (inputs.dot(np.random.standard_normal((5, 1))).squeeze(axis=-1) > 0).astype('int32')
         weight = np.random.standard_normal((5, 2))
@@ -50,6 +53,8 @@ class TestMultiplier(TestCase):
         self.assertLess(np.sum(np.abs(outputs - predicted)), 300)
 
     def test_lr_plateau(self):
+        if K.backend() != 'tensorflow':
+            return
         inputs = np.random.standard_normal((1024, 5))
         outputs = (inputs.dot(np.random.standard_normal((5, 1))).squeeze(axis=-1) > 0).astype('int32')
 
@@ -80,6 +85,8 @@ class TestMultiplier(TestCase):
         self.assertLess(np.sum(np.abs(outputs - predicted)), 20)
 
     def test_restore_weights(self):
+        if K.backend() != 'tensorflow':
+            return
         inputs = np.random.standard_normal((1024, 5))
         outputs = (inputs.dot(np.random.standard_normal((5, 1))).squeeze(axis=-1) > 0).astype('int32')
         weight = np.random.standard_normal((5, 2))
@@ -116,6 +123,8 @@ class TestMultiplier(TestCase):
         self.assertAlmostEqual(one_pass_loss, two_pass_loss, places=2)
 
     def test_repeated_weights(self):
+        if K.backend() != 'tensorflow':
+            return
         inputs = np.random.standard_normal((1024, 5))
         outputs = (inputs.dot(np.random.standard_normal((5, 1))).squeeze(axis=-1) > 0).astype('int32')
 

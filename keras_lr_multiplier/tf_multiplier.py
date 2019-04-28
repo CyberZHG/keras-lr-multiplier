@@ -1,4 +1,4 @@
-from keras.optimizers import Optimizer, get, serialize, deserialize
+from tensorflow.python.keras.optimizers import Optimizer, get, serialize, deserialize
 
 
 class LRMultiplier(Optimizer):
@@ -29,6 +29,8 @@ class LRMultiplier(Optimizer):
         return multiplier
 
     def get_updates(self, loss, params):
+        if len(self.updates) > 0:
+            return self.updates
         multiplies = {}
         for param in params:
             multiplier = self._get_multiplier(param.name)
