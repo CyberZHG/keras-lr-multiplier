@@ -1,1 +1,1 @@
-from .multiplier import LRMultiplier
+from .multiplier import *

@@ -2,10 +2,7 @@ import os
 import tempfile
 from unittest import TestCase
 import numpy as np
-from keras.models import Sequential, load_model
-from keras.layers import Dense
-from keras.optimizers import Adam
-from keras.callbacks import ReduceLROnPlateau, EarlyStopping
+from keras_lr_multiplier.backend import models, layers, optimizers, callbacks
 from keras_lr_multiplier import LRMultiplier
 
 
@@ -16,8 +13,8 @@ class TestMultiplier(TestCase):
         outputs = (inputs.dot(np.random.standard_normal((5, 1))).squeeze(axis=-1) > 0).astype('int32')
         weight = np.random.standard_normal((5, 2))
 
-        model = Sequential()
-        model.add(Dense(
+        model = models.Sequential()
+        model.add(layers.Dense(
             units=2,
             input_shape=(5,),
             use_bias=False,
@@ -29,8 +26,8 @@ class TestMultiplier(TestCase):
         model.fit(inputs, outputs, epochs=30)
         default_loss = model.evaluate(inputs, outputs)
 
-        model = Sequential()
-        model.add(Dense(
+        model = models.Sequential()
+        model.add(layers.Dense(
             units=2,
             input_shape=(5,),
             use_bias=False,
@@ -42,7 +39,7 @@ class TestMultiplier(TestCase):
         model.fit(inputs, outputs, epochs=30)
         model_path = os.path.join(tempfile.gettempdir(), 'test_lr_multiplier_%f.h5' % np.random.random())
         model.save(model_path)
-        model = load_model(model_path, custom_objects={'LRMultiplier': LRMultiplier})
+        model = models.load_model(model_path, custom_objects={'LRMultiplier': LRMultiplier})
         quick_loss = model.evaluate(inputs, outputs)
         self.assertLess(quick_loss, default_loss)
 
@@ -53,8 +50,8 @@ class TestMultiplier(TestCase):
         inputs = np.random.standard_normal((1024, 5))
         outputs = (inputs.dot(np.random.standard_normal((5, 1))).squeeze(axis=-1) > 0).astype('int32')
 
-        model = Sequential()
-        model.add(Dense(
+        model = models.Sequential()
+        model.add(layers.Dense(
             units=2,
             input_shape=(5,),
             use_bias=False,
@@ -62,7 +59,7 @@ class TestMultiplier(TestCase):
             name='Output',
         ))
         model.compile(
-            optimizer=LRMultiplier(Adam(), {'Output': 100.0}),
+            optimizer=LRMultiplier(optimizers.Adam(), {'Output': 100.0}),
             loss='sparse_categorical_crossentropy',
         )
         model.fit(
@@ -71,8 +68,8 @@ class TestMultiplier(TestCase):
             validation_split=0.1,
             epochs=1000,
             callbacks=[
-                ReduceLROnPlateau(patience=2, verbose=True),
-                EarlyStopping(patience=5),
+                callbacks.ReduceLROnPlateau(patience=2, verbose=True),
+                callbacks.EarlyStopping(patience=5),
             ],
         )
 
@@ -84,8 +81,8 @@ class TestMultiplier(TestCase):
         outputs = (inputs.dot(np.random.standard_normal((5, 1))).squeeze(axis=-1) > 0).astype('int32')
         weight = np.random.standard_normal((5, 2))
 
-        model = Sequential()
-        model.add(Dense(
+        model = models.Sequential()
+        model.add(layers.Dense(
             units=2,
             input_shape=(5,),
             use_bias=False,
@@ -97,8 +94,8 @@ class TestMultiplier(TestCase):
         model.fit(inputs, outputs, shuffle=False, epochs=30)
         one_pass_loss = model.evaluate(inputs, outputs)
 
-        model = Sequential()
-        model.add(Dense(
+        model = models.Sequential()
+        model.add(layers.Dense(
             units=2,
             input_shape=(5,),
             use_bias=False,
@@ -110,7 +107,7 @@ class TestMultiplier(TestCase):
         model.fit(inputs, outputs, shuffle=False, epochs=15)
         model_path = os.path.join(tempfile.gettempdir(), 'test_lr_multiplier_%f.h5' % np.random.random())
         model.save(model_path)
-        model = load_model(model_path, custom_objects={'LRMultiplier': LRMultiplier})
+        model = models.load_model(model_path, custom_objects={'LRMultiplier': LRMultiplier})
         model.fit(inputs, outputs, shuffle=False, epochs=15)
         two_pass_loss = model.evaluate(inputs, outputs)
         self.assertAlmostEqual(one_pass_loss, two_pass_loss, places=2)
@@ -119,14 +116,14 @@ class TestMultiplier(TestCase):
         inputs = np.random.standard_normal((1024, 5))
         outputs = (inputs.dot(np.random.standard_normal((5, 1))).squeeze(axis=-1) > 0).astype('int32')
 
-        model = Sequential()
-        model.add(Dense(
+        model = models.Sequential()
+        model.add(layers.Dense(
             units=5,
             input_shape=(5,),
             activation='tanh',
             name='Dense',
         ))
-        model.add(Dense(
+        model.add(layers.Dense(
             units=2,
             activation='softmax',
             name='Output',
@@ -141,8 +138,8 @@ class TestMultiplier(TestCase):
             validation_split=0.1,
             epochs=1000,
             callbacks=[
-                ReduceLROnPlateau(patience=2, verbose=True),
-                EarlyStopping(patience=5),
+                callbacks.ReduceLROnPlateau(patience=2, verbose=True),
+                callbacks.EarlyStopping(patience=5),
             ],
         )
         predicted = model.predict(inputs).argmax(axis=-1)

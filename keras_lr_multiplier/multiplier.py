@@ -1,7 +1,10 @@
-from keras.optimizers import Optimizer, get, serialize, deserialize
+from .backend import optimizers
 
 
-class LRMultiplier(Optimizer):
+__all__ = ['LRMultiplier']
+
+
+class LRMultiplier(optimizers.Optimizer):
 
     def __init__(self,
                  optimizer,
@@ -15,7 +18,7 @@ class LRMultiplier(Optimizer):
         :param kwargs: Arguments for parent class.
         """
         super(LRMultiplier, self).__init__(**kwargs)
-        self.optimizer = get(optimizer)
+        self.optimizer = optimizers.get(optimizer)
         self.multipliers = multipliers
         self.lr = self.optimizer.lr
 
@@ -29,6 +32,8 @@ class LRMultiplier(Optimizer):
         return multiplier
 
     def get_updates(self, loss, params):
+        if len(self.updates) > 0:
+            return self.updates
         multiplies = {}
         for param in params:
             multiplier = self._get_multiplier(param.name)
@@ -50,7 +55,7 @@ class LRMultiplier(Optimizer):
 
     def get_config(self):
         config = {
-            'optimizer': serialize(self.optimizer),
+            'optimizer': optimizers.serialize(self.optimizer),
             'multipliers': self.multipliers
         }
         base_config = super(LRMultiplier, self).get_config()
@@ -58,5 +63,5 @@ class LRMultiplier(Optimizer):
 
     @classmethod
     def from_config(cls, config):
-        optimizer = deserialize(config.pop('optimizer'))
+        optimizer = optimizers.deserialize(config.pop('optimizer'))
         return cls(optimizer, **config)
