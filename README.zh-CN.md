@@ -1,23 +1,23 @@
-# Keras LR Multiplier
+# Keras学习率分层倍率控制
 
 [![Travis](https://travis-ci.org/CyberZHG/keras-lr-multiplier.svg)](https://travis-ci.org/CyberZHG/keras-lr-multiplier)
 [![Coverage](https://coveralls.io/repos/github/CyberZHG/keras-lr-multiplier/badge.svg?branch=master)](https://coveralls.io/github/CyberZHG/keras-lr-multiplier)
 [![Version](https://img.shields.io/pypi/v/keras-lr-multiplier.svg)](https://pypi.org/project/keras-lr-multiplier/)
 [![996.ICU](https://img.shields.io/badge/license-Anti%20996-blue.svg)](https://996.icu) 
 
-Learning rate multiplier wrapper for optimizers.
+在Keras中控制每一层的学习率，通过层名的最长匹配前缀来确定学习率倍率，适用于按Keras规则写的优化器。
 
-## Install
+## 安装
 
 ```bash
 pip install keras-lr-multiplier
 ```
 
-## Usage
+## 使用
 
-### Basic
+### 基本
 
-`LRMultiplier` is a wrapper for optimizers to assign different learning rates to specific layers (or weights). The first argument is the original optimizer which could be either an identifier (e.g. `'Adam'`) or an initialized object (e.g. `Adam(lr=1e-2)`). The second argument is a dict that maps prefixes to learning rate multipliers. The multiplier for a weight is the value mapped from the __longest matched prefix__ in the given dict, and the default multiplier `1.0` will be used if there is no prefix matched.
+`LRMultiplier`中第一个参数是原有的优化器，形式和`compile`相同，可以是标志字符串（如`'Adam'`），也可以是一个初始化后的优化器（如`Adam(lr=1e-2)`）。第二个参数是一个`dict`，是名称前缀到学习率倍率的映射，每一层在没有匹配到任何前缀的情况下默认倍率取`1.0`，否则只采用最长匹配前缀的结果，如存在`"Dense"`和`"Dense-1"`时，`"Dense-12"`采用`"Dense-1"`对应的倍率。一个例子如下：
 
 ```python
 from keras.models import Sequential
@@ -42,9 +42,9 @@ model.compile(
 )
 ```
 
-### Lambda
+### 变化倍率
 
-The multiplier can be a callable object. The input argument is the number of steps starting from 0.
+倍率也可以是一个可以被调用的对象，如匿名函数或实现了`__call__`的`object`。输入的参数是从`0`开始的训练步数，需要返回对应的学习率倍率：
 
 ```python
 from keras import backend as K

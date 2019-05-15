@@ -1,4 +1,5 @@
 from .backend import optimizers
+from .backend import backend as K
 
 
 __all__ = ['LRMultiplier']
@@ -44,7 +45,9 @@ class LRMultiplier(optimizers.Optimizer):
         self.updates, self.weights = [], []
         for multiplier, params in multiplies.items():
             lr = self.lr
-            if multiplier != 1.0:
+            if callable(multiplier):
+                lr = lr * multiplier(K.cast(self.optimizer.iterations, K.floatx()))
+            elif multiplier != 1.0:
                 lr = lr * multiplier
             self.optimizer.lr = lr
             self.updates += self.optimizer.get_updates(loss, params)
