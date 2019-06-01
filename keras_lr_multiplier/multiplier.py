@@ -43,15 +43,19 @@ class LRMultiplier(optimizers.Optimizer):
             multiplies[multiplier].append(param)
 
         self.updates, self.weights = [], []
-        for multiplier, params in multiplies.items():
+        for i, (multiplier, params) in enumerate(multiplies.items()):
             lr = self.lr
             if callable(multiplier):
                 lr = lr * multiplier(K.cast(self.optimizer.iterations, K.floatx()))
             elif multiplier != 1.0:
                 lr = lr * multiplier
             self.optimizer.lr = lr
-            self.updates += self.optimizer.get_updates(loss, params)
-            self.weights += self.optimizer.weights
+            with K.name_scope('Group_{}'.format(i)):
+                self.updates += self.optimizer.get_updates(loss, params)
+            for w in self.optimizer.weights:
+                if w not in self.weights:
+                    self.weights.append(w)
+            print(self.weights)
         self.optimizer.lr = self.lr
 
         return self.updates
