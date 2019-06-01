@@ -21,7 +21,14 @@ class LRMultiplier(optimizers.Optimizer):
         super(LRMultiplier, self).__init__(**kwargs)
         self.optimizer = optimizers.get(optimizer)
         self.multipliers = multipliers
-        self.lr = self.optimizer.lr
+
+    @property
+    def lr(self):
+        return self.optimizer.lr
+
+    @lr.setter
+    def lr(self, lr):
+        self.optimizer.lr = lr
 
     def _get_multiplier(self, name):
         multiplier, prefix_len = 1.0, 0
@@ -43,8 +50,9 @@ class LRMultiplier(optimizers.Optimizer):
             multiplies[multiplier].append(param)
 
         self.updates, self.weights = [], []
+        origin_lr = self.lr
         for i, (multiplier, params) in enumerate(multiplies.items()):
-            lr = self.lr
+            lr = origin_lr
             if callable(multiplier):
                 lr = lr * multiplier(K.cast(self.optimizer.iterations, K.floatx()))
             elif multiplier != 1.0:
@@ -55,8 +63,7 @@ class LRMultiplier(optimizers.Optimizer):
             for w in self.optimizer.weights:
                 if w not in self.weights:
                     self.weights.append(w)
-            print(self.weights)
-        self.optimizer.lr = self.lr
+        self.optimizer.lr = origin_lr
 
         return self.updates
 

@@ -201,7 +201,7 @@ class TestMultiplier(TestCase):
             name='Output',
         ))
         model.compile(
-            optimizer=LRMultiplier(LRMultiplier('adam', {'Dense': 0.5}), {'Output': 1.5}),
+            optimizer=LRMultiplier(LRMultiplier('adam', {'Dense': 1.2}), {'Output': 2.0}),
             loss='sparse_categorical_crossentropy',
         )
         model.fit(
