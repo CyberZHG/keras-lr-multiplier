@@ -2,7 +2,7 @@ import os
 import tempfile
 from unittest import TestCase
 import numpy as np
-from keras_lr_multiplier.backend import models, layers, optimizers, callbacks
+from keras_lr_multiplier.backend import models, layers, optimizers, callbacks, EAGER_MODE
 from keras_lr_multiplier.backend import backend as K
 from keras_lr_multiplier import LRMultiplier
 
@@ -38,9 +38,12 @@ class TestMultiplier(TestCase):
         ))
         model.compile(optimizer=LRMultiplier('adam', {'Output': 2.0}), loss='sparse_categorical_crossentropy')
         model.fit(inputs, outputs, epochs=30)
-        model_path = os.path.join(tempfile.gettempdir(), 'test_lr_multiplier_%f.h5' % np.random.random())
-        model.save(model_path)
-        model = models.load_model(model_path, custom_objects={'LRMultiplier': LRMultiplier})
+
+        if not EAGER_MODE:
+            model_path = os.path.join(tempfile.gettempdir(), 'test_lr_multiplier_%f.h5' % np.random.random())
+            model.save(model_path)
+            model = models.load_model(model_path, custom_objects={'LRMultiplier': LRMultiplier})
+
         quick_loss = model.evaluate(inputs, outputs)
         self.assertLess(quick_loss, default_loss)
 
@@ -78,6 +81,8 @@ class TestMultiplier(TestCase):
         self.assertLess(np.sum(np.abs(outputs - predicted)), 20)
 
     def test_restore_weights(self):
+        if EAGER_MODE:
+            return
         inputs = np.random.standard_normal((1024, 5))
         outputs = (inputs.dot(np.random.standard_normal((5, 1))).squeeze(axis=-1) > 0).astype('int32')
         weight = np.random.standard_normal((5, 2))
@@ -176,5 +181,44 @@ class TestMultiplier(TestCase):
                 callbacks.EarlyStopping(patience=5),
             ],
         )
+        predicted = model.predict(inputs).argmax(axis=-1)
+        self.assertLess(np.sum(np.abs(outputs - predicted)), 20)
+
+    def test_nested(self):
+        inputs = np.random.standard_normal((1024, 5))
+        outputs = (inputs.dot(np.random.standard_normal((5, 1))).squeeze(axis=-1) > 0).astype('int32')
+
+        model = models.Sequential()
+        model.add(layers.Dense(
+            units=5,
+            input_shape=(5,),
+            activation='tanh',
+            name='Dense',
+        ))
+        model.add(layers.Dense(
+            units=2,
+            activation='softmax',
+            name='Output',
+        ))
+        model.compile(
+            optimizer=LRMultiplier(LRMultiplier('adam', {'Dense': 1.2}), {'Output': 2.0}),
+            loss='sparse_categorical_crossentropy',
+        )
+        model.fit(
+            inputs,
+            outputs,
+            validation_split=0.1,
+            epochs=1000,
+            callbacks=[
+                callbacks.ReduceLROnPlateau(patience=2, verbose=True),
+                callbacks.EarlyStopping(patience=5),
+            ],
+        )
+
+        if not EAGER_MODE:
+            model_path = os.path.join(tempfile.gettempdir(), 'test_lr_multiplier_%f.h5' % np.random.random())
+            model.save(model_path)
+            model = models.load_model(model_path, custom_objects={'LRMultiplier': LRMultiplier})
+
         predicted = model.predict(inputs).argmax(axis=-1)
         self.assertLess(np.sum(np.abs(outputs - predicted)), 20)
