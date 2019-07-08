@@ -25,6 +25,10 @@ pip install keras-lr-multiplier
 
 ## 使用
 
+### 外部
+
+[Keras中不同layer设置不同学习率的实现](https://zhuanlan.zhihu.com/p/64132241)
+
 ### 基本
 
 `LRMultiplier`中第一个参数是原有的优化器，形式和`compile`相同，可以是标志字符串（如`'Adam'`），也可以是一个初始化后的优化器（如`Adam(lr=1e-2)`）。第二个参数是一个`dict`，是名称前缀到学习率倍率的映射，每一层在没有匹配到任何前缀的情况下默认倍率取`1.0`，否则只采用最长匹配前缀的结果，如存在`"Dense"`和`"Dense-1"`时，`"Dense-12"`采用`"Dense-1"`对应的倍率。一个例子如下：
