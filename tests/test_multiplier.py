@@ -2,20 +2,16 @@ import os
 import tempfile
 from unittest import TestCase
 import numpy as np
-from keras_lr_multiplier.backend import models, layers, callbacks, constraints
+from keras_lr_multiplier.backend import keras, models, layers, callbacks, constraints
 from keras_lr_multiplier.backend import backend as K, TF_KERAS
 from keras_lr_multiplier import LRMultiplier
-from keras_lr_multiplier.optimizers import AdamV2
 
 
 class TestMultiplier(TestCase):
 
     @staticmethod
     def _get_custom_objects():
-        return {
-            'AdamV2': AdamV2,
-            'LRMultiplier': LRMultiplier
-        }
+        return {'LRMultiplier': LRMultiplier}
 
     def test_compare_rate(self):
         inputs = np.random.standard_normal((1024, 5))
@@ -31,7 +27,7 @@ class TestMultiplier(TestCase):
             weights=[weight],
             name='Output',
         ))
-        model.compile(optimizer=AdamV2(), loss='sparse_categorical_crossentropy')
+        model.compile(optimizer='adam', loss='sparse_categorical_crossentropy')
         model.fit(inputs, outputs, epochs=30)
         default_loss = model.evaluate(inputs, outputs)
 
@@ -44,7 +40,7 @@ class TestMultiplier(TestCase):
             weights=[weight],
             name='Output',
         ))
-        model.compile(optimizer=LRMultiplier(AdamV2(), {'Output': 2.0}), loss='sparse_categorical_crossentropy')
+        model.compile(optimizer=LRMultiplier('adam', {'Output': 2.0}), loss='sparse_categorical_crossentropy')
         model.fit(inputs, outputs, epochs=30)
 
         model_path = os.path.join(tempfile.gettempdir(), 'test_lr_multiplier_%f.h5' % np.random.random())
@@ -70,7 +66,7 @@ class TestMultiplier(TestCase):
             name='Output',
         ))
         model.compile(
-            optimizer=LRMultiplier(AdamV2(), {'Output': 100.0}),
+            optimizer=LRMultiplier('adam', {'Output': 100.0}),
             loss='sparse_categorical_crossentropy',
         )
         model.fit(
@@ -105,7 +101,7 @@ class TestMultiplier(TestCase):
             weights=[weight],
             name='Output',
         ))
-        model.compile(optimizer=AdamV2(), loss='sparse_categorical_crossentropy')
+        model.compile(optimizer='adam', loss='sparse_categorical_crossentropy')
         model.fit(inputs, outputs, shuffle=False, epochs=30)
         one_pass_loss = model.evaluate(inputs, outputs)
 
@@ -122,7 +118,7 @@ class TestMultiplier(TestCase):
             weights=[weight],
             name='Output',
         ))
-        model.compile(optimizer=LRMultiplier(AdamV2(), {}), loss='sparse_categorical_crossentropy')
+        model.compile(optimizer=LRMultiplier('adam', {}), loss='sparse_categorical_crossentropy')
         model.fit(inputs, outputs, shuffle=False, epochs=15)
         model_path = os.path.join(tempfile.gettempdir(), 'test_lr_multiplier_%f.h5' % np.random.random())
         model.save(model_path)
@@ -148,7 +144,7 @@ class TestMultiplier(TestCase):
             name='Output',
         ))
         model.compile(
-            optimizer=LRMultiplier(AdamV2(), {'Dense': 0.5, 'Output': 1.5}),
+            optimizer=LRMultiplier('adam', {'Dense': 0.5, 'Output': 1.5}),
             loss='sparse_categorical_crossentropy',
         )
         model.fit(
@@ -181,7 +177,7 @@ class TestMultiplier(TestCase):
             name='Output',
         ))
         model.compile(
-            optimizer=LRMultiplier(AdamV2(), {'Dense': lambda t: 2.0 - K.minimum(1.9, t * 1e-4)}),
+            optimizer=LRMultiplier('adam', {'Dense': lambda t: 2.0 - K.minimum(1.9, t * 1e-4)}),
             loss='sparse_categorical_crossentropy',
         )
         model.fit(
@@ -214,8 +210,13 @@ class TestMultiplier(TestCase):
             activation='softmax',
             name='Output',
         ))
+        if TF_KERAS:
+            import tensorflow as tf
+            base_opt = tf.keras.optimizers.Adam(amsgrad=True, decay=1e-4)
+        else:
+            base_opt = keras.optimizers.Adam(amsgrad=True, decay=1e-4)
         model.compile(
-            optimizer=LRMultiplier(LRMultiplier(AdamV2(amsgrad=True, decay=1e-4), {'Dense': 1.2}), {'Output': 2.0}),
+            optimizer=LRMultiplier(LRMultiplier(base_opt, {'Dense': 1.2}), {'Output': 2.0}),
             loss='sparse_categorical_crossentropy',
         )
         model.fit(

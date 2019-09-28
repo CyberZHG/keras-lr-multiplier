@@ -21,6 +21,10 @@ class LRMultiplier(optimizers.Optimizer):
         super(LRMultiplier, self).__init__(**kwargs)
         self.optimizer = optimizers.get(optimizer)
         self.multipliers = multipliers
+        if hasattr(self.optimizer, 'learning_rate'):
+            self.lr_attr = 'learning_rate'
+        else:
+            self.lr_attr = 'lr'
 
     @property
     def lr(self):
@@ -29,6 +33,17 @@ class LRMultiplier(optimizers.Optimizer):
     @lr.setter
     def lr(self, lr):
         self.optimizer.lr = lr
+
+    @property
+    def learning_rate(self):
+        return self.optimizer.learning_rate
+
+    @learning_rate.setter
+    def learning_rate(self, learning_rate):
+        try:
+            self.optimizer.learning_rate = learning_rate
+        except ValueError:
+            self.optimizer._hyper['learning_rate'] = learning_rate
 
     def _get_multiplier(self, name):
         multiplier, prefix_len = 1.0, 0
@@ -50,20 +65,21 @@ class LRMultiplier(optimizers.Optimizer):
             multiplies[multiplier].append(param)
 
         self.updates, self.weights = [], []
-        origin_lr = self.lr
+        origin_lr = getattr(self, self.lr_attr)
         for i, (multiplier, params) in enumerate(multiplies.items()):
             lr = origin_lr
             if callable(multiplier):
                 lr = lr * multiplier(K.cast(self.optimizer.iterations, K.floatx()))
             elif multiplier != 1.0:
                 lr = lr * multiplier
-            self.optimizer.lr = lr
+            setattr(self, self.lr_attr, lr)
             with K.name_scope('Group_{}'.format(i)):
                 self.updates += self.optimizer.get_updates(loss, params)
+            print(self.multipliers, i, self.optimizer.weights)
             for w in self.optimizer.weights:
                 if w not in self.weights:
                     self.weights.append(w)
-        self.optimizer.lr = origin_lr
+        setattr(self, self.lr_attr, origin_lr)
 
         return self.updates
 
