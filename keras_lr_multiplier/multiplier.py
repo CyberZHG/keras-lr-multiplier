@@ -77,7 +77,7 @@ class LRMultiplier(optimizers.Optimizer):
                 self.updates += self.optimizer.get_updates(loss, params)
             print(self.multipliers, i, self.optimizer.weights)
             for w in self.optimizer.weights:
-                if w not in self.weights:
+                if w.name not in [x.name for x in self.weights]:
                     self.weights.append(w)
         setattr(self, self.lr_attr, origin_lr)
 
