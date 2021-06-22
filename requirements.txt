@@ -1,2 +1,2 @@
 numpy
-Keras
+Keras==2.2.4

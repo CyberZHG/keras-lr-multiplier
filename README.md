@@ -2,22 +2,15 @@
 
 [![Travis](https://travis-ci.org/CyberZHG/keras-lr-multiplier.svg)](https://travis-ci.org/CyberZHG/keras-lr-multiplier)
 [![Coverage](https://coveralls.io/repos/github/CyberZHG/keras-lr-multiplier/badge.svg?branch=master)](https://coveralls.io/github/CyberZHG/keras-lr-multiplier)
-[![Version](https://img.shields.io/pypi/v/keras-lr-multiplier.svg)](https://pypi.org/project/keras-lr-multiplier/)
-![Downloads](https://img.shields.io/pypi/dm/keras-lr-multiplier.svg)
 
-![](https://img.shields.io/badge/keras-tensorflow-blue.svg)
-![](https://img.shields.io/badge/keras-tf.keras-blue.svg)
-![](https://img.shields.io/badge/keras-tf.keras/eager-blue.svg)
-![](https://img.shields.io/badge/keras-tf.keras/2.0_beta-blue.svg)
-
-\[[中文](https://github.com/CyberZHG/keras-lr-multiplier/blob/master/README.zh-CN.md)|[English](https://github.com/CyberZHG/keras-lr-multiplier/blob/master/README.md)\]
+**This repo is outdated and will no longer be maintained.**
 
 Learning rate multiplier wrapper for optimizers.
 
 ## Install
 
 ```bash
-pip install keras-lr-multiplier
+pip install git+https://github.com/CyberZHG/keras-lr-multiplier.git
 ```
 
 ## Usage
