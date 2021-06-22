@@ -1,7 +1,6 @@
 from .backend import optimizers
 from .backend import backend as K
 
-
 __all__ = ['LRMultiplier']
 
 
@@ -25,6 +24,7 @@ class LRMultiplier(optimizers.Optimizer):
             self.lr_attr = 'learning_rate'
         else:
             self.lr_attr = 'lr'
+        self.updates, self.weights = [], []
 
     @property
     def lr(self):
@@ -75,9 +75,9 @@ class LRMultiplier(optimizers.Optimizer):
             setattr(self, self.lr_attr, lr)
             with K.name_scope('Group_{}'.format(i)):
                 self.updates += self.optimizer.get_updates(loss, params)
-            print(self.multipliers, i, self.optimizer.weights)
+            names = set(map(lambda x: x.name, self.weights))
             for w in self.optimizer.weights:
-                if w not in self.weights:
+                if w.name not in names:
                     self.weights.append(w)
         setattr(self, self.lr_attr, origin_lr)
 
